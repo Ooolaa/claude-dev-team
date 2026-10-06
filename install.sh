@@ -12,6 +12,9 @@ claude plugin marketplace add JuliusBrussee/caveman
 claude plugin marketplace add obra/superpowers
 claude plugin marketplace add multica-ai/andrej-karpathy-skills
 claude plugin marketplace add mattpocock/skills
+claude plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill
+claude plugin marketplace add Leonxlnx/taste-skill
+claude plugin marketplace add pbakaus/impeccable
 
 echo "Installing plugins..."
 claude plugin install ponytail@ponytail -y
@@ -19,6 +22,9 @@ claude plugin install caveman@caveman -y
 claude plugin install superpowers@superpowers-dev -y
 claude plugin install andrej-karpathy-skills@karpathy-skills -y
 claude plugin install mattpocock-skills@mattpocock -y
+claude plugin install ui-ux-pro-max@ui-ux-pro-max-skill -y
+claude plugin install taste-skill@taste-skill -y
+claude plugin install impeccable@impeccable -y
 
 echo "Fetching steipete/agent-rules..."
 tmp=$(mktemp -d)
