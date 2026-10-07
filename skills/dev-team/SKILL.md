@@ -1,6 +1,6 @@
 ---
 name: dev-team
-description: Launch the eight-agent dev team (Karpathy, Superpowers, Mattpocock, Steipete, Caveman, plus designers ProMax, Taste, Impeccable) as an agent team that discusses and builds a task together. Use when the user says "/dev-team", "start the dev team", "run the team on this", or asks the team agents to work on a project.
+description: Launch the eight-agent dev team (Skeptic, Superpowers, Mattpocock, Steipete, Caveman, plus designers ProMax, Taste, Impeccable) as an agent team that discusses and builds a task together. Use when the user says "/dev-team", "start the dev team", "run the team on this", or asks the team agents to work on a project.
 ---
 
 # Dev team
@@ -13,7 +13,7 @@ Spawn eight **teammates** (agent team, not plain subagents), using these names a
 
 | Name | Agent type | Role |
 |---|---|---|
-| Karpathy | team-karpathy | skeptic: assumptions, success criteria, scope guard |
+| Skeptic | team-skeptic | skeptic: assumptions, success criteria, scope guard |
 | Superpowers | team-superpowers | planner: design + task plan in docs/plans/ |
 | Mattpocock | team-mattpocock | builder: test-first implementation, only one who edits code |
 | Steipete | team-steipete | quality gate: build/lint/test, docs, changelog |
@@ -24,16 +24,16 @@ Spawn eight **teammates** (agent team, not plain subagents), using these names a
 
 For work with no UI at all, skip the three designers.
 
-Spawn every teammate while the session's working directory is the project root. Give each the user's task, the project path, and the starting commit (`git rev-parse HEAD`, if it's a git repo).
+Spawn every teammate while the session's working directory is the project root. Give each the user's task, the project path, the starting commit (`git rev-parse HEAD`, if it's a git repo), and the table above so they know who plays which role.
 
 ## Flow
 
 Put these on the shared task list with dependencies:
 
-1. **Discuss** (in parallel): Karpathy sends the brief; Steipete finds the build/test commands; Superpowers reads the code; Taste and ProMax agree a visual direction and design spec and send it to Superpowers. Have them message each other to challenge the brief.
-2. **Ask:** bring any open questions from Karpathy to the user. Wait for answers.
-3. **Plan:** Superpowers writes the plan; Karpathy challenges it once. Show the user the plan summary and get a go-ahead.
-4. **Build:** Mattpocock implements task by task. Steipete checks each task; Impeccable audits screenshots of each visual task; Karpathy guards scope.
+1. **Discuss** (in parallel): Skeptic sends the brief; Steipete finds the build/test commands; Superpowers reads the code; Taste and ProMax agree a visual direction and design spec and send it to Superpowers. Have them message each other to challenge the brief.
+2. **Ask:** bring any open questions from Skeptic to the user. Wait for answers.
+3. **Plan:** Superpowers writes the plan; Skeptic challenges it once. Show the user the plan summary and get a go-ahead.
+4. **Build:** Mattpocock implements task by task. Steipete checks each task; Impeccable audits screenshots of each visual task; Skeptic guards scope.
 5. **Review:** Caveman reviews the diff; Mattpocock fixes; Steipete runs the final checks and updates docs/changelog.
 6. **Wrap up:** relay Caveman's summary and Steipete's draft commit message. Commit or push only if the user says so. Then shut the team down.
 
