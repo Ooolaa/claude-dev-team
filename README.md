@@ -1,6 +1,8 @@
-# Claude Dev Team
+# Rolecall
 
-Eight well-known agent rule sets, turned into eight Claude Code agents (five engineers and three designers) that discuss a task, challenge each other, and build it together.
+Eight well-known agent rule sets, turned into a team of eight coding roles (five engineers and three designers) that discuss a task, challenge each other, and build it together.
+
+_Formerly `claude-dev-team`; the old URL redirects here._
 
 ```
 /dev-team add offline caching to the article list
@@ -50,8 +52,8 @@ Every agent owns its own set of files, and the designers only advise, so they ne
 Requires [Claude Code](https://code.claude.com), `git`, `jq` and `node`.
 
 ```bash
-git clone https://github.com/Ooolaa/claude-dev-team.git
-cd claude-dev-team
+git clone https://github.com/Ooolaa/rolecall.git
+cd rolecall
 ./install.sh
 ```
 
@@ -94,7 +96,7 @@ Then remove `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` from the `env` block of `~/.c
 
 ## Credits
 
-This repo only contains the agent definitions, the `/dev-team` skill and an install script. All the rules come from these projects, installed from their own repositories:
+Rolecall only contains the agent definitions, the `/dev-team` skill and an install script. All the rules come from these projects, installed from their own repositories:
 
 - [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) by Dietrich Gebert (MIT)
 - [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) by Julius Brussee (Apache 2.0)

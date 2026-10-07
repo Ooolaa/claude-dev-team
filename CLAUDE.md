@@ -1,10 +1,10 @@
-# claude-dev-team
+# Rolecall
 
 ## Agent skills
 
 ### Issue tracker
 
-Issues live in GitHub Issues for Ooolaa/claude-dev-team, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
+Issues live in GitHub Issues for Ooolaa/rolecall, managed with the `gh` CLI. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

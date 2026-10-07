@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs the five-agent dev team for Claude Code (user scope).
+# Installs Rolecall for Claude Code (user scope).
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -50,4 +50,4 @@ cfg="${XDG_CONFIG_HOME:-$HOME/.config}/caveman/config.json"
 mkdir -p "$(dirname "$cfg")"
 [ -f "$cfg" ] || echo '{ "defaultMode": "off" }' > "$cfg"
 
-echo "Done. Restart Claude Code, then run: /dev-team <your task>"
+echo "Rolecall installed. Restart Claude Code, then run: /dev-team <your task>"
