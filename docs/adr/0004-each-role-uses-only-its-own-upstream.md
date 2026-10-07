@@ -1,0 +1,3 @@
+# Each Role uses only its own Upstream
+
+Each Teammate works from its own Upstream plus the Base rule, not from every installed rule set. Otherwise the Roles blur together: superpowers and mattpocock/skills both ship TDD, debugging and review skills, and superpowers' startup hook tells every session to brainstorm first. On Codex and Cursor the generator scopes this in each Role file. Claude Code can't scope plugins per Teammate, so there the Role file names the exact skill to use and tells the Teammate to ignore the others. That is enforced only by instructions; the benchmark will show whether it holds.
