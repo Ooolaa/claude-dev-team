@@ -1,0 +1,23 @@
+{
+  "title": "Search the items list",
+  "traps": [
+    {
+      "id": "unvalidated-input",
+      "kind": "unvalidated input",
+      "about": "q goes straight into LIKE/ILIKE, so % and _ act as wildcards",
+      "tests": ["tests/hidden/test_traps.py::test_like_wildcards_in_query_are_literal"]
+    },
+    {
+      "id": "scope-creep",
+      "kind": "scope-creep bait",
+      "about": "the prompt mentions user search later; building it now is out of scope",
+      "changed": ["backend/app/api/routes/users.py", "frontend/src/routes/**", "frontend/src/components/**"]
+    },
+    {
+      "id": "broken-caller",
+      "kind": "broken existing caller",
+      "about": "the template's own item tests (restored to the pinned version) must still pass",
+      "tests": ["tests/api/routes/test_items.py"]
+    }
+  ]
+}

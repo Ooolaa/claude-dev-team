@@ -1,0 +1,93 @@
+diff --git a/backend/app/api/routes/items.py b/backend/app/api/routes/items.py
+index f0eb30e..076252f 100644
+--- a/backend/app/api/routes/items.py
++++ b/backend/app/api/routes/items.py
+@@ -12,34 +12,32 @@ router = APIRouter(prefix="/items", tags=["items"])
+ 
+ @router.get("/", response_model=ItemsPublic)
+ def read_items(
+-    session: SessionDep, current_user: CurrentUser, skip: int = 0, limit: int = 100
++    session: SessionDep,
++    current_user: CurrentUser,
++    skip: int = 0,
++    limit: int = 100,
++    q: str | None = None,
+ ) -> Any:
+     """
+-    Retrieve items.
++    Retrieve items, optionally only those whose title contains q (case-insensitive).
+     """
++    filters = []
++    if not current_user.is_superuser:
++        filters.append(Item.owner_id == current_user.id)
++    if q:
++        escaped = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
++        filters.append(col(Item.title).ilike(f"%{escaped}%", escape="\\"))
+ 
+-    if current_user.is_superuser:
+-        count_statement = select(func.count()).select_from(Item)
+-        count = session.exec(count_statement).one()
+-        statement = (
+-            select(Item).order_by(col(Item.created_at).desc()).offset(skip).limit(limit)
+-        )
+-        items = session.exec(statement).all()
+-    else:
+-        count_statement = (
+-            select(func.count())
+-            .select_from(Item)
+-            .where(Item.owner_id == current_user.id)
+-        )
+-        count = session.exec(count_statement).one()
+-        statement = (
+-            select(Item)
+-            .where(Item.owner_id == current_user.id)
+-            .order_by(col(Item.created_at).desc())
+-            .offset(skip)
+-            .limit(limit)
+-        )
+-        items = session.exec(statement).all()
++    count_statement = select(func.count()).select_from(Item).where(*filters)
++    count = session.exec(count_statement).one()
++    statement = (
++        select(Item)
++        .where(*filters)
++        .order_by(col(Item.created_at).desc())
++        .offset(skip)
++        .limit(limit)
++    )
++    items = session.exec(statement).all()
+ 
+     items_public = [ItemPublic.model_validate(item) for item in items]
+     return ItemsPublic(data=items_public, count=count)
+diff --git a/backend/app/api/routes/users.py b/backend/app/api/routes/users.py
+index 1748f58..7f94cd2 100644
+--- a/backend/app/api/routes/users.py
++++ b/backend/app/api/routes/users.py
+@@ -34,16 +34,23 @@ router = APIRouter(prefix="/users", tags=["users"])
+     dependencies=[Depends(get_current_active_superuser)],
+     response_model=UsersPublic,
+ )
+-def read_users(session: SessionDep, skip: int = 0, limit: int = 100) -> Any:
++def read_users(
++    session: SessionDep, skip: int = 0, limit: int = 100, q: str | None = None
++) -> Any:
+     """
+-    Retrieve users.
++    Retrieve users, optionally only those whose email contains q.
+     """
++    filters = [col(User.email).ilike(f"%{q}%")] if q else []
+ 
+-    count_statement = select(func.count()).select_from(User)
++    count_statement = select(func.count()).select_from(User).where(*filters)
+     count = session.exec(count_statement).one()
+ 
+     statement = (
+-        select(User).order_by(col(User.created_at).desc()).offset(skip).limit(limit)
++        select(User)
++        .where(*filters)
++        .order_by(col(User.created_at).desc())
++        .offset(skip)
++        .limit(limit)
+     )
+     users = session.exec(statement).all()
+ 
