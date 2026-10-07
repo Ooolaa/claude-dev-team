@@ -11,4 +11,4 @@ Each task in `tasks/<task>/` has:
 
 `scorer/score.mjs` takes a finished working tree and a task and returns pass or fail per hidden test and per Trap. It runs the tests in Docker against a throwaway Postgres (`scorer/compose.yml`), using the template's own tests as pinned rather than any edits the agent made to them.
 
-`node --test` checks every task's fixtures: the good one passes every hidden test and trips no Trap, and each trap fixture trips only its own Trap. Those checks need Docker running (Docker Desktop, OrbStack or Colima) and are skipped without it. Work copies go in `~/.cache/rolecall/`, because Colima shares only your home directory with its VM.
+`node --test` checks every task's fixtures: the good one passes every hidden test and trips no Trap, and each trap fixture trips only its own Trap. It also checks that the tasks together cover every Trap kind and that at least one needs UI work. Those checks need Docker running (Docker Desktop, OrbStack or Colima) and are skipped without it. Work copies go in `~/.cache/rolecall/`, because Colima shares only your home directory with its VM.

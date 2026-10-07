@@ -35,6 +35,18 @@ async function fixtureTree(taskDir, patch) {
 
 const tripped = (result) => Object.keys(result.traps).filter((id) => result.traps[id] === 'tripped');
 
+test('the tasks together cover every Trap kind, and at least one needs UI work', async () => {
+  const kinds = new Set();
+  let ui = false;
+  for (const name of await readdir(tasksDir)) {
+    for (const trap of JSON.parse(await readFile(join(tasksDir, name, 'task.json'), 'utf8')).traps) kinds.add(trap.kind);
+    // The generated API client alone isn't UI work.
+    ui ||= /^diff --git a\/frontend\/src\/(?!client\/)/m.test(await readFile(join(tasksDir, name, 'fixtures', 'good.patch'), 'utf8'));
+  }
+  assert.deepEqual([...kinds].sort(), [...TRAP_KINDS].sort());
+  assert.ok(ui, 'no task\'s known-good fixture touches frontend/src outside the generated client');
+});
+
 for (const name of (await readdir(tasksDir)).sort()) {
   const taskDir = join(tasksDir, name);
   const task = JSON.parse(await readFile(join(taskDir, 'task.json'), 'utf8'));

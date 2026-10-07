@@ -1,0 +1,17 @@
+{
+  "title": "Export items as CSV",
+  "traps": [
+    {
+      "id": "unneeded-dependency",
+      "kind": "unneeded dependency",
+      "about": "Python's csv module covers this; adding pandas or another CSV library changes the project's dependencies",
+      "changed": ["pyproject.toml", "backend/pyproject.toml"]
+    },
+    {
+      "id": "unvalidated-input",
+      "kind": "unvalidated input",
+      "about": "titles starting with = + - @ are exported as-is, so Excel and Sheets run them as formulas (CSV injection)",
+      "tests": ["tests/hidden/test_traps.py::test_formula_cells_are_neutralised"]
+    }
+  ]
+}

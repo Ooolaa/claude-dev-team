@@ -1,0 +1,158 @@
+diff --git a/backend/app/alembic/versions/3b7e1c2d9a4f_add_done_to_item.py b/backend/app/alembic/versions/3b7e1c2d9a4f_add_done_to_item.py
+new file mode 100644
+index 0000000..7bf01ec
+--- /dev/null
++++ b/backend/app/alembic/versions/3b7e1c2d9a4f_add_done_to_item.py
+@@ -0,0 +1,24 @@
++"""Add done to Item
++
++Revision ID: 3b7e1c2d9a4f
++Revises: fe56fa70289e
++Create Date: 2026-10-07 12:00:00.000000
++
++"""
++from alembic import op
++import sqlalchemy as sa
++
++
++# revision identifiers, used by Alembic.
++revision = '3b7e1c2d9a4f'
++down_revision = 'fe56fa70289e'
++branch_labels = None
++depends_on = None
++
++
++def upgrade():
++    op.add_column('item', sa.Column('done', sa.Boolean(), nullable=False, server_default=sa.false()))
++
++
++def downgrade():
++    op.drop_column('item', 'done')
+diff --git a/backend/app/models.py b/backend/app/models.py
+index 181acf2..13f5b6a 100644
+--- a/backend/app/models.py
++++ b/backend/app/models.py
+@@ -70,6 +70,7 @@ class UsersPublic(SQLModel):
+ class ItemBase(SQLModel):
+     title: str = Field(min_length=1, max_length=255)
+     description: str | None = Field(default=None, max_length=255)
++    done: bool = False
+ 
+ 
+ # Properties to receive on item creation
+@@ -81,6 +82,7 @@ class ItemCreate(ItemBase):
+ class ItemUpdate(SQLModel):
+     title: str | None = Field(default=None, min_length=1, max_length=255)
+     description: str | None = Field(default=None, max_length=255)
++    done: bool | None = None
+ 
+ 
+ # Database model, database table inferred from class name
+diff --git a/frontend/src/client/types.gen.ts b/frontend/src/client/types.gen.ts
+index 6252d88..515ee44 100644
+--- a/frontend/src/client/types.gen.ts
++++ b/frontend/src/client/types.gen.ts
+@@ -56,6 +56,10 @@ export type ItemCreate = {
+      * Description
+      */
+     description?: string | null;
++    /**
++     * Done
++     */
++    done?: boolean;
+ };
+ 
+ /**
+@@ -70,6 +74,10 @@ export type ItemPublic = {
+      * Description
+      */
+     description?: string | null;
++    /**
++     * Done
++     */
++    done?: boolean;
+     /**
+      * Id
+      */
+@@ -96,6 +104,10 @@ export type ItemUpdate = {
+      * Description
+      */
+     description?: string | null;
++    /**
++     * Done
++     */
++    done?: boolean | null;
+ };
+ 
+ /**
+diff --git a/frontend/src/components/Items/columns.tsx b/frontend/src/components/Items/columns.tsx
+index b41be2a..883a464 100644
+--- a/frontend/src/components/Items/columns.tsx
++++ b/frontend/src/components/Items/columns.tsx
+@@ -1,10 +1,14 @@
++import { useMutation, useQueryClient } from "@tanstack/react-query"
+ import type { ColumnDef } from "@tanstack/react-table"
+ import { Check, Copy } from "lucide-react"
+ 
+-import type { ItemPublic } from "@/client"
++import { type ItemPublic, ItemsService } from "@/client"
+ import { Button } from "@/components/ui/button"
++import { Checkbox } from "@/components/ui/checkbox"
+ import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
++import useCustomToast from "@/hooks/useCustomToast"
+ import { cn } from "@/lib/utils"
++import { handleError } from "@/utils"
+ import { ItemActionsMenu } from "./ItemActionsMenu"
+ 
+ function CopyId({ id }: { id: string }) {
+@@ -31,7 +35,34 @@ function CopyId({ id }: { id: string }) {
+   )
+ }
+ 
++function DoneCheckbox({ item }: { item: ItemPublic }) {
++  const queryClient = useQueryClient()
++  const { showErrorToast } = useCustomToast()
++  const mutation = useMutation({
++    mutationFn: (done: boolean) =>
++      ItemsService.updateItem({ path: { id: item.id }, body: { done } }),
++    onError: handleError.bind(showErrorToast),
++    onSettled: () => {
++      queryClient.invalidateQueries({ queryKey: ["items"] })
++    },
++  })
++
++  return (
++    <Checkbox
++      checked={item.done ?? false}
++      disabled={mutation.isPending}
++      onCheckedChange={(checked) => mutation.mutate(checked === true)}
++      aria-label={`Mark "${item.title}" as ${item.done ? "not done" : "done"}`}
++    />
++  )
++}
++
+ export const columns: ColumnDef<ItemPublic>[] = [
++  {
++    accessorKey: "done",
++    header: () => <span className="sr-only">Done</span>,
++    cell: ({ row }) => <DoneCheckbox item={row.original} />,
++  },
+   {
+     accessorKey: "id",
+     header: "ID",
+@@ -41,7 +72,14 @@ export const columns: ColumnDef<ItemPublic>[] = [
+     accessorKey: "title",
+     header: "Title",
+     cell: ({ row }) => (
+-      <span className="font-medium">{row.original.title}</span>
++      <span
++        className={cn(
++          "font-medium",
++          row.original.done && "line-through text-muted-foreground",
++        )}
++      >
++        {row.original.title}
++      </span>
+     ),
+   },
+   {

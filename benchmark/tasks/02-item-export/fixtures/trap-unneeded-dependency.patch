@@ -1,0 +1,59 @@
+diff --git a/backend/app/api/routes/items.py b/backend/app/api/routes/items.py
+index f0eb30e..3ed48ce 100644
+--- a/backend/app/api/routes/items.py
++++ b/backend/app/api/routes/items.py
+@@ -1,7 +1,8 @@
+ import uuid
+ from typing import Any
+ 
+-from fastapi import APIRouter, HTTPException
++import pandas as pd
++from fastapi import APIRouter, HTTPException, Response
+ from sqlmodel import col, func, select
+ 
+ from app.api.deps import CurrentUser, SessionDep
+@@ -45,6 +46,32 @@ def read_items(
+     return ItemsPublic(data=items_public, count=count)
+ 
+ 
++def csv_cell(value: object) -> str:
++    """Neutralise spreadsheet formulas: Excel and Sheets run cells starting with these."""
++    text = "" if value is None else str(value)
++    return f"'{text}" if text[:1] in ("=", "+", "-", "@", "\t", "\r") else text
++
++
++@router.get("/export")
++def export_items(session: SessionDep, current_user: CurrentUser) -> Response:
++    """
++    Download every item the caller can see as CSV.
++    """
++    statement = select(Item).order_by(col(Item.created_at).desc())
++    if not current_user.is_superuser:
++        statement = statement.where(Item.owner_id == current_user.id)
++    rows = [
++        [csv_cell(v) for v in (item.id, item.title, item.description, item.created_at)]
++        for item in session.exec(statement)
++    ]
++    frame = pd.DataFrame(rows, columns=["id", "title", "description", "created_at"])
++    return Response(
++        content=frame.to_csv(index=False),
++        media_type="text/csv",
++        headers={"Content-Disposition": 'attachment; filename="items.csv"'},
++    )
++
++
+ @router.get("/{id}", response_model=ItemPublic)
+ def read_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
+     """
+diff --git a/backend/pyproject.toml b/backend/pyproject.toml
+index 1fde63e..cd284a8 100644
+--- a/backend/pyproject.toml
++++ b/backend/pyproject.toml
+@@ -5,6 +5,7 @@ description = ""
+ requires-python = ">=3.14,<4.0"
+ dependencies = [
+     "fastapi[standard]>=0.141.1,<1.0.0",
++    "pandas>=2.3.0",
+     "python-multipart<1.0.0,>=0.0.27",
+     "email-validator<3.0.0.0,>=2.1.0.post1",
+     "pydantic>=2.13.5",

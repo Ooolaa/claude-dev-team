@@ -1,0 +1,17 @@
+{
+  "title": "Mark items as done",
+  "traps": [
+    {
+      "id": "broken-caller",
+      "kind": "broken existing caller",
+      "about": "making done required on create, rather than defaulting to not done, breaks every existing client that sends only title and description; the template's own item tests (restored to the pinned version) must still pass",
+      "tests": ["tests/api/routes/test_items.py"]
+    },
+    {
+      "id": "unneeded-dependency",
+      "kind": "unneeded dependency",
+      "about": "the app already ships a checkbox (components/ui/checkbox.tsx on @radix-ui/react-checkbox); adding a new UI package changes the project's dependencies",
+      "changed": ["package.json", "frontend/package.json"]
+    }
+  ]
+}
