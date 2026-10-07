@@ -8,44 +8,44 @@ _Formerly `claude-dev-team`; the old URL redirects here._
 /dev-team add offline caching to the article list
 ```
 
-Each agent is based on one popular open-source project and keeps that project's way of thinking:
+Each Role is named by its job and based on one popular open-source project (its Upstream), keeping that project's way of thinking:
 
-| Agent | Based on | Role | Edits |
+| Role | Upstream | Job | Edits |
 |---|---|---|---|
-| **Skeptic** | [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | Skeptic: reads the code, states assumptions, asks questions, sets success criteria, keeps changes small | Nothing |
-| **Superpowers** | [obra/superpowers](https://github.com/obra/superpowers) | Planner: writes the design and a step-by-step plan | `docs/plans/` |
-| **Mattpocock** | [mattpocock/skills](https://github.com/mattpocock/skills) | Builder: implements test-first and debugs methodically | Source and tests |
-| **Steipete** | [steipete/agent-rules](https://github.com/steipete/agent-rules) | Quality gate: build, lint, tests, docs, changelog | Docs and changelog |
-| **Caveman** | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Reviewer: terse diff review and final summary | Nothing |
-| **ProMax** | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | Design-system lead: colors, type scale, spacing, component states, UX rules | Nothing |
-| **Taste** | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | Art director: one clear visual direction, keeps the UI from looking like a generic AI template | Nothing |
-| **Impeccable** | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Design critic: audits screenshots of the built UI and sends exact polish fixes | Nothing |
+| **Skeptic** | [andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills) | Reads the code, states assumptions, asks questions, sets success criteria, keeps changes small | Nothing |
+| **Planner** | [obra/superpowers](https://github.com/obra/superpowers) | Writes the design and a step-by-step plan | `docs/plans/` |
+| **Builder** | [mattpocock/skills](https://github.com/mattpocock/skills) | Implements test-first and debugs methodically | Source and tests |
+| **Gatekeeper** | [steipete/agent-rules](https://github.com/steipete/agent-rules) | Build, lint, tests, docs, changelog | Docs and changelog |
+| **Reviewer** | [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) | Terse diff review and final summary | Nothing |
+| **Design Lead** | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | Colors, type scale, spacing, component states, UX rules | Nothing |
+| **Art Director** | [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) | One clear visual direction, keeps the UI from looking like a generic AI template | Nothing |
+| **Design Critic** | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) | Audits screenshots of the built UI and sends exact polish fixes | Nothing |
 
-For work with no UI, the lead skips the three designers.
+For work with no UI, the lead skips the three design Roles.
 
 [Ponytail](https://github.com/DietrichGebert/ponytail) runs underneath all of them as an always-on rule: write only the code the task needs.
 
 ## How it works
 
-The `/dev-team` skill makes your Claude Code session the **team lead**. It spawns the agents as an [agent team](https://code.claude.com/docs/en/agent-teams): separate Claude sessions with a shared task list that message each other directly.
+The `/dev-team` skill makes your Claude Code session the **team lead**. It spawns the Roles as an [agent team](https://code.claude.com/docs/en/agent-teams): separate Claude sessions with a shared task list that message each other directly.
 
 ```
-1. Discuss   Skeptic writes the brief, Steipete finds the build/test commands,
-             Superpowers reads the code, Taste and ProMax agree a visual
-             direction and design spec. They challenge each other.
+1. Discuss   Skeptic writes the brief, Gatekeeper finds the build/test
+             commands, Planner reads the code, Art Director and Design Lead
+             agree a visual direction and design spec. They challenge each other.
 2. Ask       Open questions come to you. The team waits for answers.
-3. Plan      Superpowers writes the plan, Skeptic pushes back once.
+3. Plan      Planner writes the plan, Skeptic pushes back once.
              You approve it before any code is written.
-4. Build     Mattpocock builds task by task, test-first.
-             Steipete checks every task, Impeccable audits screenshots
+4. Build     Builder builds task by task, test-first.
+             Gatekeeper checks every task, Design Critic audits screenshots
              of every visual task, Skeptic guards scope.
-5. Review    Caveman reviews the diff, Mattpocock fixes,
-             Steipete runs final checks and updates docs.
+5. Review    Reviewer reviews the diff, Builder fixes,
+             Gatekeeper runs final checks and updates docs.
 6. Wrap up   You get a summary and a draft commit message.
              Nothing is committed or pushed unless you say so.
 ```
 
-Every agent owns its own set of files, and the designers only advise, so they never overwrite each other's work.
+Every Role owns its own set of files, and the design Roles only advise, so they never overwrite each other's work.
 
 ## Install
 
@@ -61,9 +61,9 @@ The script:
 
 - installs the plugins for ponytail, caveman, superpowers, andrej-karpathy-skills, mattpocock/skills, ui-ux-pro-max, taste-skill and impeccable
 - copies steipete/agent-rules to `~/.claude/agent-rules/steipete/`
-- copies the eight agents to `~/.claude/agents/` and the skill to `~/.claude/skills/dev-team/`
+- copies the eight Role files to `~/.claude/agents/` (removing older person-named ones such as `team-karpathy.md`) and the skill to `~/.claude/skills/dev-team/`
 - enables agent teams (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`) in `~/.claude/settings.json`, after backing it up
-- turns caveman's always-on voice off, so only the Caveman agent talks that way
+- turns caveman's always-on voice off, so only the Reviewer talks that way
 
 Restart Claude Code afterwards.
 
@@ -79,20 +79,18 @@ In the agent panel below the prompt, use ↑/↓ to select an agent and Enter to
 
 ## Things to know
 
-- **Cost:** every agent is a separate session, so the full team uses roughly eight times the tokens of one session (five without the designers). Use the team for real features, not one-line fixes. The lead will tell you when a task is too small.
+- **Cost:** every agent is a separate session, so the full team uses roughly eight times the tokens of one session (five without the design Roles). Use the team for real features, not one-line fixes. The lead will tell you when a task is too small.
 - **Agent teams are experimental** in Claude Code. Sessions with in-process teammates can't be resumed, and task status sometimes lags.
-- **Overlaps:** superpowers and mattpocock/skills both ship test-driven development, debugging and review skills. The agent files decide which one each agent uses. Superpowers also loads a short guide into every session; `claude plugin disable superpowers` turns that off.
+- **Overlaps:** superpowers and mattpocock/skills both ship test-driven development, debugging and review skills. Each Role file names the exact skills its Teammate uses and tells it to ignore the rest. Superpowers also loads a short guide into every session; the other Role files tell their Teammates to ignore it. Don't disable superpowers, because the Planner uses it.
 - **Delegation changes:** with agent teams on, Claude may start teammates on its own when it delegates work. Set the variable to `0` to switch back.
 
 ## Uninstall
 
 ```bash
-rm -f ~/.claude/agents/team-{skeptic,karpathy,superpowers,mattpocock,steipete,caveman,promax,taste,impeccable}.md
-rm -r ~/.claude/skills/dev-team ~/.claude/agent-rules/steipete
-for p in ponytail caveman superpowers andrej-karpathy-skills mattpocock-skills ui-ux-pro-max taste-skill impeccable; do claude plugin uninstall $p; done
+./install.sh --uninstall
 ```
 
-Then remove `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` from the `env` block of `~/.claude/settings.json`.
+This removes the Role files, the `/dev-team` skill, steipete/agent-rules, the eight plugins and their marketplaces, and the agent-teams setting (after backing up `~/.claude/settings.json`). It also uninstalls those plugins if you had them before Rolecall.
 
 ## Changing a Role
 
@@ -100,7 +98,7 @@ Each Role is defined once in `roles/<role>.mjs`. Regenerate the Role files in `a
 
 ## Credits
 
-Rolecall only contains the agent definitions, the `/dev-team` skill and an install script. All the rules come from these projects, installed from their own repositories:
+Rolecall only contains the Role sources and generated Role files, the `/dev-team` skill and an install script. All the rules come from these projects, installed from their own repositories:
 
 - [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) by Dietrich Gebert (MIT)
 - [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) by Julius Brussee (Apache 2.0)

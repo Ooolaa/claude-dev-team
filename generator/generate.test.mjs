@@ -3,40 +3,61 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { generate } from './generate.mjs';
 
 const rolesDir = fileURLToPath(new URL('../roles/', import.meta.url));
 const agentsDir = fileURLToPath(new URL('../agents/', import.meta.url));
 const freshDir = () => mkdtemp(join(tmpdir(), 'rolecall-'));
 
-async function skeptic() {
-  const dir = await freshDir();
-  await generate({ rolesDir, outDir: dir });
-  return readFile(join(dir, 'team-skeptic.md'), 'utf8');
+const roles = await Promise.all(
+  (await readdir(rolesDir)).map(async (f) => (await import(pathToFileURL(join(rolesDir, f)))).default),
+);
+const escape = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const generated = await freshDir();
+await generate({ rolesDir, outDir: generated });
+const roleFile = (role) => readFile(join(generated, `team-${role.id}.md`), 'utf8');
+
+test('there is one Role source per Role, named by job', () => {
+  assert.deepEqual(roles.map((r) => r.name).sort(), [
+    'Art Director', 'Builder', 'Design Critic', 'Design Lead',
+    'Gatekeeper', 'Planner', 'Reviewer', 'Skeptic',
+  ]);
+});
+
+test('generator writes exactly one Role file per Role and nothing else', async () => {
+  assert.deepEqual((await readdir(generated)).sort(), roles.map((r) => `team-${r.id}.md`).sort());
+});
+
+for (const role of roles) {
+  test(`${role.name}: Role file has name, description, model and instructions`, async () => {
+    const [, frontmatter, body] = (await roleFile(role)).split(/^---$/m);
+    assert.match(frontmatter, new RegExp(`^name: team-${role.id}$`, 'm'));
+    assert.match(frontmatter, /^description: ".+"$/m);
+    assert.match(frontmatter, /^model: \S+$/m);
+    assert.match(body, new RegExp(`You are the \\*\\*${role.name}\\*\\*`));
+    assert.ok(body.includes(role.instructions));
+  });
+
+  test(`${role.name}: Role file credits its Upstream`, async () => {
+    const file = await roleFile(role);
+    const { name, url, license } = role.upstream;
+    assert.match(file, new RegExp(`\\[${escape(name)}\\]\\(${escape(url)}\\) \\(${escape(license)}\\)`));
+  });
+
+  test(`${role.name}: Role file scopes the Teammate to its own skills plus the Base rule`, async () => {
+    const file = await roleFile(role);
+    assert.ok(role.skills.length > 0);
+    for (const skill of role.skills) assert.ok(file.includes(`\`${skill}\``), skill);
+    assert.match(file, /`ponytail:ponytail`/);
+    assert.match(file, /Ignore every other skill/);
+  });
 }
 
-test('Skeptic Role file has name, description, model and instructions', async () => {
-  const file = await skeptic();
-  const [, frontmatter, body] = file.split(/^---$/m);
-  assert.match(frontmatter, /^name: team-skeptic$/m);
-  assert.match(frontmatter, /^description: ".+"$/m);
-  assert.match(frontmatter, /^model: \S+$/m);
-  assert.match(body, /You are the \*\*Skeptic\*\*/);
-});
-
-test('Skeptic Role file credits its Upstream', async () => {
-  const file = await skeptic();
-  assert.match(file, /andrej-karpathy-skills/);
-  assert.match(file, /https:\/\/github\.com\/multica-ai\/andrej-karpathy-skills/);
-  assert.match(file, /MIT/);
-});
-
-test('Skeptic Role file scopes the Teammate to its own skill plus the Base rule', async () => {
-  const file = await skeptic();
-  assert.match(file, /`andrej-karpathy-skills:karpathy-guidelines`/);
-  assert.match(file, /`ponytail:ponytail`/);
-  assert.match(file, /Ignore every other skill/);
+test('only the Builder, Planner and Gatekeeper may edit files', async () => {
+  const editors = roles.filter((r) => r.edits !== 'none').map((r) => `${r.name}: ${r.edits}`).sort();
+  assert.deepEqual(editors, ['Builder: source and tests', 'Gatekeeper: docs and changelog', 'Planner: plans']);
 });
 
 test('stale check passes when files match fresh output', async () => {
@@ -53,7 +74,7 @@ test('stale check reports drifted and missing files without writing', async () =
   assert.equal(await readFile(join(dir, 'team-skeptic.md'), 'utf8'), 'hand edit');
 
   const empty = await freshDir();
-  assert.deepEqual(await generate({ rolesDir, outDir: empty, check: true }), ['team-skeptic.md']);
+  assert.equal((await generate({ rolesDir, outDir: empty, check: true })).length, roles.length);
   assert.deepEqual(await readdir(empty), []);
 });
 
