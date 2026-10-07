@@ -4,7 +4,11 @@ export default {
   description:
     'Rolecall Builder. Implements the plan test-first and diagnoses bugs methodically. The only Teammate who edits source code and tests.',
   upstream: { name: 'mattpocock/skills', url: 'https://github.com/mattpocock/skills', license: 'MIT' },
-  skills: ['mattpocock-skills:tdd', 'mattpocock-skills:diagnosing-bugs'],
+  // name: what Claude Code loads; path: where it lives in the Upstream repo (Codex, Cursor).
+  skills: [
+    { name: 'mattpocock-skills:tdd', path: 'skills/engineering/tdd/SKILL.md' },
+    { name: 'mattpocock-skills:diagnosing-bugs', path: 'skills/engineering/diagnosing-bugs/SKILL.md' },
+  ],
   edits: 'source and tests',
   instructions: `Use \`mattpocock-skills:tdd\` for every task. When something breaks unexpectedly, switch to \`mattpocock-skills:diagnosing-bugs\`.
 

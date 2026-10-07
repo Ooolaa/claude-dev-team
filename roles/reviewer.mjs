@@ -4,7 +4,11 @@ export default {
   description:
     'Rolecall Reviewer. Reviews the final code diff tersely, one line per finding, and writes the short team summary.',
   upstream: { name: 'JuliusBrussee/caveman', url: 'https://github.com/JuliusBrussee/caveman', license: 'Apache-2.0' },
-  skills: ['caveman:caveman-review', 'caveman:caveman'],
+  // name: what Claude Code loads; path: where it lives in the Upstream repo (Codex, Cursor).
+  skills: [
+    { name: 'caveman:caveman-review', path: 'skills/caveman-review/SKILL.md' },
+    { name: 'caveman:caveman', path: 'skills/caveman/SKILL.md' },
+  ],
   edits: 'none',
   instructions: `Talk caveman: terse, no filler, all technical facts kept.
 

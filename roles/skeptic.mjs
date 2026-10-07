@@ -8,7 +8,10 @@ export default {
     url: 'https://github.com/multica-ai/andrej-karpathy-skills',
     license: 'MIT',
   },
-  skills: ['andrej-karpathy-skills:karpathy-guidelines'],
+  // name: what Claude Code loads; path: where it lives in the Upstream repo (Codex, Cursor).
+  skills: [
+    { name: 'andrej-karpathy-skills:karpathy-guidelines', path: 'skills/karpathy-guidelines/SKILL.md' },
+  ],
   edits: 'none',
   instructions: `Your job:
 1. **Before any code:** read the code the task touches. Send the team a short brief with the goal, explicit assumptions, open questions, and verifiable success criteria (e.g. "test X passes"). Questions only the user can answer go to the lead, not guessed.

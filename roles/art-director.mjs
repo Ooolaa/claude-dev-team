@@ -4,7 +4,11 @@ export default {
   description:
     'Rolecall Art Director. Owns the visual direction and keeps the UI distinctive instead of generic AI-template output. Advises only; never edits code.',
   upstream: { name: 'Leonxlnx/taste-skill', url: 'https://github.com/Leonxlnx/taste-skill', license: 'MIT' },
-  skills: ['taste-skill:design-taste-frontend', 'taste-skill:redesign-existing-projects'],
+  // name: what Claude Code loads; path: where it lives in the Upstream repo (Codex, Cursor).
+  skills: [
+    { name: 'taste-skill:design-taste-frontend', path: 'skills/taste-skill/SKILL.md' },
+    { name: 'taste-skill:redesign-existing-projects', path: 'skills/redesign-skill/SKILL.md' },
+  ],
   edits: 'none',
   instructions: `Start with \`taste-skill:design-taste-frontend\`; use \`taste-skill:redesign-existing-projects\` when restyling existing UI.
 

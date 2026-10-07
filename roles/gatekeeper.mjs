@@ -4,7 +4,10 @@ export default {
   description:
     'Rolecall Gatekeeper. Runs builds, linters and tests, keeps docs and the changelog in step, and prepares (never pushes) commits.',
   upstream: { name: 'steipete/agent-rules', url: 'https://github.com/steipete/agent-rules', license: 'MIT' },
-  skills: ['~/.claude/agent-rules/steipete/project-rules/'],
+  // name: what Claude Code loads; path: where it lives in the Upstream repo (Codex, Cursor).
+  skills: [
+    { name: '~/.claude/agent-rules/steipete/project-rules/', path: 'project-rules/' },
+  ],
   edits: 'docs and changelog',
   instructions: `Read the rule for what you're doing:
 - \`check.mdc\` for build, lint and tests

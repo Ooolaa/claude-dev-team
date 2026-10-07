@@ -4,7 +4,10 @@ export default {
   description:
     'Rolecall Design Critic. Audits the rendered UI from screenshots, not the code, and sends precise polish fixes. Advises only; never edits code.',
   upstream: { name: 'pbakaus/impeccable', url: 'https://github.com/pbakaus/impeccable', license: 'Apache-2.0' },
-  skills: ['impeccable:impeccable'],
+  // name: what Claude Code loads; path: where it lives in the Upstream repo (Codex, Cursor).
+  skills: [
+    { name: 'impeccable:impeccable', path: '.agents/skills/impeccable/SKILL.md' },
+  ],
   edits: 'none',
   instructions: `Use impeccable's audit, critique and polish commands.
 

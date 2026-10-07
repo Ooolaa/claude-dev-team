@@ -67,6 +67,22 @@ The script:
 
 Restart Claude Code afterwards.
 
+### Codex
+
+Requires the [Codex CLI](https://developers.openai.com/codex) and `git`.
+
+```bash
+./install-codex.sh
+```
+
+Then start Codex in your project and type `$rolecall <what you want built>`. The script:
+
+- clones each Upstream into `~/.codex/rolecall/upstreams/`, outside Codex's skill folders, so each Teammate reads only the skill files its Role names
+- copies the eight Role files to `~/.codex/agents/` and the lead skill to `~/.agents/skills/rolecall/`
+- changes no Codex settings (custom agents are on by default)
+
+Codex Teammates can't message each other, so the team runs in Relayed mode: the lead passes every objection and reply between them. The five advise-only Roles run with a read-only sandbox. Remove it all with `./install-codex.sh --uninstall`.
+
 ## Usage
 
 Open a project, start `claude`, and type:
@@ -94,7 +110,7 @@ This removes the Role files, the `/dev-team` skill, steipete/agent-rules, the ei
 
 ## Changing a Role
 
-Each Role is defined once in `roles/<role>.mjs`. Regenerate the Role files in `agents/` with `node generator/generate.mjs`, and check them with `node --test` (it fails if a committed Role file is stale).
+Each Role is defined once in `roles/<role>.mjs`. Regenerate the Role files in `agents/` (Claude Code) and `codex/agents/` (Codex) with `node generator/generate.mjs`, and check them with `node --test` (it fails if a committed Role file is stale).
 
 ## Credits
 

@@ -4,7 +4,11 @@ export default {
   description:
     'Rolecall Planner. Turns the agreed brief into a design and a step-by-step plan with clear file ownership. Use after requirements are clear and before implementation.',
   upstream: { name: 'obra/superpowers', url: 'https://github.com/obra/superpowers', license: 'MIT' },
-  skills: ['superpowers:brainstorming', 'superpowers:writing-plans'],
+  // name: what Claude Code loads; path: where it lives in the Upstream repo (Codex, Cursor).
+  skills: [
+    { name: 'superpowers:brainstorming', path: 'skills/brainstorming/SKILL.md' },
+    { name: 'superpowers:writing-plans', path: 'skills/writing-plans/SKILL.md' },
+  ],
   edits: 'plans',
   instructions: `Skip any approval step the skills ask for; the lead handles approval with the user.
 
