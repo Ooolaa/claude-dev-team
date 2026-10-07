@@ -25,4 +25,5 @@ services:
     command:
       - bash
       - -c
-      - uv sync --quiet && uv run bash scripts/prestart.sh && uv run pytest -p no:cacheprovider -q --junitxml=/work/junit.xml $$TESTS
+      # app/frontend is the built SPA (git-ignored); the API tests only need the directory to exist.
+      - mkdir -p app/frontend && uv sync --quiet && uv run bash scripts/prestart.sh && uv run pytest -p no:cacheprovider -q --junitxml=/work/junit.xml $$TESTS

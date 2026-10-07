@@ -1,7 +1,16 @@
 diff --git a/backend/app/api/routes/items.py b/backend/app/api/routes/items.py
-index f0eb30e..628fa87 100644
+index f0eb30e..2f6f2cd 100644
 --- a/backend/app/api/routes/items.py
 +++ b/backend/app/api/routes/items.py
+@@ -1,7 +1,7 @@
+ import uuid
+ from typing import Any
+ 
+-from fastapi import APIRouter, HTTPException
++from fastapi import APIRouter, HTTPException, Query
+ from sqlmodel import col, func, select
+ 
+ from app.api.deps import CurrentUser, SessionDep
 @@ -12,34 +12,32 @@ router = APIRouter(prefix="/items", tags=["items"])
  
  @router.get("/", response_model=ItemsPublic)
@@ -11,7 +20,7 @@ index f0eb30e..628fa87 100644
 +    current_user: CurrentUser,
 +    skip: int = 0,
 +    limit: int = 100,
-+    q: str,
++    q: str = Query(),
  ) -> Any:
      """
 -    Retrieve items.

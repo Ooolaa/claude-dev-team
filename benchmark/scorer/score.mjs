@@ -2,13 +2,15 @@
 // checked by changed-file globs and by pytest results; tests run in Docker.
 import { execFileSync, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { cp, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { join, matchesGlob } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const scorerDir = fileURLToPath(new URL('.', import.meta.url));
 const HIDDEN = 'tests/hidden';
+// Under the home directory, because Docker VMs such as Colima share only that by default.
+const WORK_ROOT = join(homedir(), '.cache', 'rolecall');
 
 const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8' });
 
@@ -54,7 +56,8 @@ export async function score({ taskDir, tree }) {
   const { commit } = JSON.parse(await readFile(join(scorerDir, '..', 'template.json'), 'utf8'));
   const changed = changedFiles(tree, commit);
 
-  const work = await mkdtemp(join(tmpdir(), 'rolecall-score-'));
+  await mkdir(WORK_ROOT, { recursive: true });
+  const work = await mkdtemp(join(WORK_ROOT, 'score-'));
   try {
     await cp(tree, work, { recursive: true, filter: (src) => !/[\\/](node_modules|\.venv)$/.test(src) });
     // Score against the template's own tests as pinned, plus the hidden ones; never the agent's edits to them.
