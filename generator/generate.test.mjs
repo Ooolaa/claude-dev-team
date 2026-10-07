@@ -21,6 +21,7 @@ const credit = (role) =>
 const generated = await freshDir();
 const written = await generate({ rolesDir, outDir: generated });
 const claudeFile = (role) => readFile(join(generated, 'agents', `team-${role.id}.md`), 'utf8');
+const cursorFile = (role) => readFile(join(generated, 'cursor', 'agents', `rolecall-${role.id}.md`), 'utf8');
 const codexPath = (role) => join(generated, 'codex', 'agents', `rolecall-${role.id}.toml`);
 // Parse with a real TOML parser (Python's stdlib tomllib) rather than trusting our own output.
 const parseToml = (file) =>
@@ -33,8 +34,10 @@ test('there is one Role source per Role, named by job', () => {
   ]);
 });
 
-test('generator writes exactly one Claude Code and one Codex Role file per Role', () => {
-  assert.deepEqual(written.sort(), roles.flatMap((r) => [`agents/team-${r.id}.md`, `codex/agents/rolecall-${r.id}.toml`]).sort());
+test('generator writes exactly one Claude Code, one Codex and one Cursor Role file per Role', () => {
+  assert.deepEqual(written.sort(), roles.flatMap((r) => [
+    `agents/team-${r.id}.md`, `codex/agents/rolecall-${r.id}.toml`, `cursor/agents/rolecall-${r.id}.md`,
+  ]).sort());
 });
 
 test('only the Builder, Planner and Gatekeeper may edit files', () => {
@@ -80,6 +83,27 @@ for (const role of roles) {
     ].sort());
     for (const skill of role.skills) assert.ok(!text.includes(skill.name), `Claude Code skill name left in: ${skill.name}`);
   });
+
+  test(`${role.name} (Cursor): name, description, model, readonly and instructions`, async () => {
+    const [, frontmatter, body] = (await cursorFile(role)).split(/^---$/m);
+    assert.match(frontmatter, new RegExp(`^name: rolecall-${role.id}$`, 'm'));
+    assert.match(frontmatter, new RegExp(`^description: ${escape(JSON.stringify(role.description))}$`, 'm'));
+    assert.match(frontmatter, /^model: inherit$/m);
+    assert.match(frontmatter, new RegExp(`^readonly: ${role.edits === 'none'}$`, 'm'));
+    assert.match(body, new RegExp(`You are the \\*\\*${role.name}\\*\\* on a Rolecall team, in Relayed mode`));
+  });
+
+  test(`${role.name} (Cursor): credits its Upstream and points only at its own skills plus the Base rule`, async () => {
+    const text = await cursorFile(role);
+    assert.match(text, credit(role));
+    const repo = new URL(role.upstream.url).pathname.slice(1);
+    const skillPaths = [...new Set([...text.matchAll(/`~\/\.cursor\/rolecall\/upstreams\/([^`]+)`/g)].map((m) => m[1]))].sort();
+    assert.deepEqual(skillPaths, [
+      ...role.skills.map((s) => `${repo}/${s.path}`),
+      'DietrichGebert/ponytail/skills/ponytail/SKILL.md',
+    ].sort());
+    for (const skill of role.skills) assert.ok(!text.includes(skill.name), `Claude Code skill name left in: ${skill.name}`);
+  });
 }
 
 test('stale check passes when files match fresh output', async () => {
@@ -93,14 +117,15 @@ test('stale check reports drifted and missing files without writing', async () =
   await generate({ rolesDir, outDir: dir });
   await writeFile(join(dir, 'agents', 'team-skeptic.md'), 'hand edit');
   await writeFile(join(dir, 'codex', 'agents', 'rolecall-builder.toml'), 'hand edit');
+  await writeFile(join(dir, 'cursor', 'agents', 'rolecall-planner.md'), 'hand edit');
   assert.deepEqual(
     (await generate({ rolesDir, outDir: dir, check: true })).sort(),
-    ['agents/team-skeptic.md', 'codex/agents/rolecall-builder.toml'],
+    ['agents/team-skeptic.md', 'codex/agents/rolecall-builder.toml', 'cursor/agents/rolecall-planner.md'],
   );
   assert.equal(await readFile(join(dir, 'agents', 'team-skeptic.md'), 'utf8'), 'hand edit');
 
   const empty = await freshDir();
-  assert.equal((await generate({ rolesDir, outDir: empty, check: true })).length, roles.length * 2);
+  assert.equal((await generate({ rolesDir, outDir: empty, check: true })).length, roles.length * 3);
   assert.deepEqual(await readdir(empty), []);
 });
 
@@ -108,9 +133,11 @@ test('committed Role files are up to date', async () => {
   assert.deepEqual(await generate({ rolesDir, outDir: root, check: true }), []);
 });
 
-test('the Codex installer clones every Upstream the Role files point at', async () => {
-  const installer = await readFile(join(root, 'install-codex.sh'), 'utf8');
-  for (const url of [...roles.map((r) => r.upstream.url), 'https://github.com/DietrichGebert/ponytail']) {
-    assert.ok(installer.includes(new URL(url).pathname.slice(1)), url);
-  }
-});
+for (const script of ['install-codex.sh', 'install-cursor.sh']) {
+  test(`${script} clones every Upstream the Role files point at`, async () => {
+    const installer = await readFile(join(root, script), 'utf8');
+    for (const url of [...roles.map((r) => r.upstream.url), 'https://github.com/DietrichGebert/ponytail']) {
+      assert.ok(installer.includes(new URL(url).pathname.slice(1)), url);
+    }
+  });
+}

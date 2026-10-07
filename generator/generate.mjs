@@ -1,6 +1,7 @@
 // Turns each Role source in roles/ into its Role file for every agent:
 //   Claude Code  agents/team-<id>.md
 //   Codex        codex/agents/rolecall-<id>.toml
+//   Cursor       cursor/agents/rolecall-<id>.md
 // Usage: node generator/generate.mjs [--check]   (--check writes nothing, exits 1 if stale)
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -13,8 +14,9 @@ const BASE_RULE = {
   skill: { name: 'ponytail:ponytail', path: 'skills/ponytail/SKILL.md' },
 };
 
-// Where install-codex.sh clones each Upstream: <dir>/<owner>/<repo>.
+// Where install-codex.sh / install-cursor.sh clone each Upstream: <dir>/<owner>/<repo>.
 const CODEX_UPSTREAMS = '~/.codex/rolecall/upstreams';
+const CURSOR_UPSTREAMS = '~/.cursor/rolecall/upstreams';
 
 const EDITS = {
   none: 'none. You do not edit project files',
@@ -47,11 +49,12 @@ ${role.instructions}
 `;
 }
 
-function renderCodex(role) {
-  const at = (url, skill) => `\`${CODEX_UPSTREAMS}/${new URL(url).pathname.slice(1)}/${skill.path}\``;
-  // Codex can't load Claude Code skill names, so point any the instructions mention at the file instead.
+// Relayed mode (Codex, Cursor): Teammates report only to the lead, and skills are files under `upstreams`.
+function relayedInstructions(role, upstreams) {
+  const at = (url, skill) => `\`${upstreams}/${new URL(url).pathname.slice(1)}/${skill.path}\``;
+  // These agents can't load Claude Code skill names, so point any the instructions mention at the file instead.
   const body = role.skills.reduce((text, s) => text.replaceAll(`\`${s.name}\``, at(role.upstream.url, s)), role.instructions);
-  const instructions = `You are the **${role.name}** on a Rolecall team, in Relayed mode: you report only to the lead. Wherever these instructions say to message or send something to another Teammate, put it in your reply to the lead, addressed to that Teammate by job name; the lead relays it and brings back their answer.
+  return `You are the **${role.name}** on a Rolecall team, in Relayed mode: you report only to the lead. Wherever these instructions say to message or send something to another Teammate, put it in your reply to the lead, addressed to that Teammate by job name; the lead relays it and brings back their answer.
 
 ${credit(role)}
 
@@ -62,6 +65,10 @@ ${role.skills.map((s) => `- ${at(role.upstream.url, s)}`).join('\n')}
 **Files you may edit:** ${EDITS[role.edits]}.
 
 ${body}`;
+}
+
+function renderCodex(role) {
+  const instructions = relayedInstructions(role, CODEX_UPSTREAMS);
   if (instructions.includes("'''")) throw new Error(`${role.id}: instructions can't contain '''`);
   return `# Generated from roles/${role.id}.mjs by generator/generate.mjs. Do not edit.
 name = "rolecall_${role.id.replaceAll('-', '_')}"
@@ -73,9 +80,24 @@ ${instructions}
 `;
 }
 
+function renderCursor(role) {
+  return `---
+name: rolecall-${role.id}
+description: ${JSON.stringify(role.description)}
+model: inherit
+readonly: ${role.edits === 'none'}
+---
+
+<!-- Generated from roles/${role.id}.mjs by generator/generate.mjs. Do not edit. -->
+
+${relayedInstructions(role, CURSOR_UPSTREAMS)}
+`;
+}
+
 const TARGETS = [
   { file: (role) => `agents/team-${role.id}.md`, render: renderClaude },
   { file: (role) => `codex/agents/rolecall-${role.id}.toml`, render: renderCodex },
+  { file: (role) => `cursor/agents/rolecall-${role.id}.md`, render: renderCursor },
 ];
 
 async function loadRoles(rolesDir) {
