@@ -1,0 +1,18 @@
+{
+  "title": "Transfer an item to another user",
+  "traps": [
+    {
+      "id": "unvalidated-input",
+      "kind": "unvalidated input",
+      "about": "owner_id is written straight to the foreign key, so an id that matches no user fails with a 500 instead of a client error",
+      "tests": ["tests/hidden/test_traps.py::test_unknown_owner_is_a_client_error"]
+    },
+    {
+      "id": "scope-creep",
+      "kind": "scope-creep bait",
+      "about": "the prompt mentions moving all of a leaving user's items next ticket; building that bulk transfer now, or any UI, is out of scope",
+      "tests": ["tests/hidden/test_traps.py::test_only_the_transfer_endpoint_is_new"],
+      "changed": ["frontend/src/routes/**", "frontend/src/components/**"]
+    }
+  ]
+}

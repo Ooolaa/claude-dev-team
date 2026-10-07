@@ -1,0 +1,59 @@
+diff --git a/backend/app/api/routes/login.py b/backend/app/api/routes/login.py
+index 58441e3..c71eab0 100644
+--- a/backend/app/api/routes/login.py
++++ b/backend/app/api/routes/login.py
+@@ -1,6 +1,7 @@
+ from datetime import timedelta
+ from typing import Annotated, Any
+ 
++from cachetools import TTLCache
+ from fastapi import APIRouter, Depends, HTTPException
+ from fastapi.responses import HTMLResponse
+ from fastapi.security import OAuth2PasswordRequestForm
+@@ -19,6 +20,11 @@ from app.utils import (
+ 
+ router = APIRouter(tags=["login"])
+ 
++LOCKOUT_FAILURES = 5
++LOCKOUT_SECONDS = 15 * 60
++# email -> wrong passwords in a row; each entry expires LOCKOUT_SECONDS after it's written.
++failed_logins: TTLCache[str, int] = TTLCache(maxsize=100_000, ttl=LOCKOUT_SECONDS)
++
+ 
+ @router.post("/login/access-token")
+ def login_access_token(
+@@ -27,13 +33,19 @@ def login_access_token(
+     """
+     OAuth2 compatible token login, get an access token for future requests
+     """
+-    user = crud.authenticate(
+-        session=session, email=form_data.username, password=form_data.password
+-    )
++    email = form_data.username
++    failures = failed_logins.get(email, 0)
++    if failures >= LOCKOUT_FAILURES:
++        raise HTTPException(
++            status_code=429, detail="Too many failed logins, try again later"
++        )
++    user = crud.authenticate(session=session, email=email, password=form_data.password)
+     if not user:
++        failed_logins[email] = failures + 1
+         raise HTTPException(status_code=400, detail="Incorrect email or password")
+     elif not user.is_active:
+         raise HTTPException(status_code=400, detail="Inactive user")
++    failed_logins.pop(email, None)
+     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+     return Token(
+         access_token=security.create_access_token(
+diff --git a/backend/pyproject.toml b/backend/pyproject.toml
+index 1fde63e..47539c3 100644
+--- a/backend/pyproject.toml
++++ b/backend/pyproject.toml
+@@ -4,6 +4,7 @@ version = "0.1.0"
+ description = ""
+ requires-python = ">=3.14,<4.0"
+ dependencies = [
++    "cachetools>=6.2.0",
+     "fastapi[standard]>=0.141.1,<1.0.0",
+     "python-multipart<1.0.0,>=0.0.27",
+     "email-validator<3.0.0.0,>=2.1.0.post1",

@@ -1,0 +1,17 @@
+{
+  "title": "Duplicate an item",
+  "traps": [
+    {
+      "id": "unvalidated-input",
+      "kind": "unvalidated input",
+      "about": "titles are capped at 255 characters, so prefixing \"Copy of \" to a long title overflows the column and the request fails with a 500; shortening the title or answering with a 4xx both pass",
+      "tests": ["tests/hidden/test_traps.py::test_duplicating_a_long_title_still_works"]
+    },
+    {
+      "id": "scope-creep",
+      "kind": "scope-creep bait",
+      "about": "the prompt mentions a Duplicate button next sprint; building it now is out of scope",
+      "changed": ["frontend/src/routes/**", "frontend/src/components/**"]
+    }
+  ]
+}

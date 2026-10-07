@@ -1,0 +1,46 @@
+diff --git a/backend/app/api/routes/login.py b/backend/app/api/routes/login.py
+index 58441e3..0725eb1 100644
+--- a/backend/app/api/routes/login.py
++++ b/backend/app/api/routes/login.py
+@@ -1,3 +1,4 @@
++import time
+ from datetime import timedelta
+ from typing import Annotated, Any
+ 
+@@ -19,6 +20,11 @@ from app.utils import (
+ 
+ router = APIRouter(tags=["login"])
+ 
++LOCKOUT_FAILURES = 5
++LOCKOUT_SECONDS = 15 * 60
++# email -> (wrong passwords in a row, time of the last one). In memory: one backend instance.
++failed_logins: dict[str, tuple[int, float]] = {}
++
+ 
+ @router.post("/login/access-token")
+ def login_access_token(
+@@ -27,13 +33,21 @@ def login_access_token(
+     """
+     OAuth2 compatible token login, get an access token for future requests
+     """
+-    user = crud.authenticate(
+-        session=session, email=form_data.username, password=form_data.password
+-    )
++    email = form_data.username
++    failures, last = failed_logins.get(email, (0, 0.0))
++    if time.monotonic() - last >= LOCKOUT_SECONDS:
++        failures = 0
++    if failures >= LOCKOUT_FAILURES:
++        raise HTTPException(
++            status_code=429, detail="Too many failed logins, try again later"
++        )
++    user = crud.authenticate(session=session, email=email, password=form_data.password)
+     if not user:
++        failed_logins[email] = (failures + 1, time.monotonic())
+         raise HTTPException(status_code=400, detail="Incorrect email or password")
+     elif not user.is_active:
+         raise HTTPException(status_code=400, detail="Inactive user")
++    failed_logins.pop(email, None)
+     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+     return Token(
+         access_token=security.create_access_token(

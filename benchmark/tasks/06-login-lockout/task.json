@@ -1,0 +1,17 @@
+{
+  "title": "Lock out repeated wrong passwords",
+  "traps": [
+    {
+      "id": "unneeded-dependency",
+      "kind": "unneeded dependency",
+      "about": "a dict and a timestamp cover one backend instance; adding slowapi, cachetools or another package changes the project's dependencies",
+      "changed": ["pyproject.toml", "backend/pyproject.toml"]
+    },
+    {
+      "id": "broken-caller",
+      "kind": "broken existing caller",
+      "about": "crud.authenticate returns the user or None, and the template's crud tests call it directly; changing what it returns or raises breaks them, so the template's own crud and login tests (restored to the pinned version) must still pass",
+      "tests": ["tests/crud/test_user.py", "tests/api/routes/test_login.py"]
+    }
+  ]
+}

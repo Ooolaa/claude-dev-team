@@ -6,8 +6,10 @@ Each task in `tasks/<task>/` has:
 
 - `prompt.md`: what the agent sees
 - `hidden/`: pytest files the agent never sees
-- `task.json`: its Traps, each checked by hidden or template tests failing (`tests`) or by changed files matching a glob (`changed`)
+- `task.json`: its Traps, each checked by hidden or template tests failing (`tests`), by changed files matching a glob (`changed`), or both
 - `fixtures/`: patches against the pinned template, `good.patch` plus one `trap-<id>.patch` per Trap
+
+`04-item-duplicate` is deliberately small, one endpoint a single session should handle well, so the results also show where the team is overkill.
 
 `scorer/score.mjs` takes a finished working tree and a task and returns pass or fail per hidden test and per Trap. It runs the tests in Docker against a throwaway Postgres (`scorer/compose.yml`), using the template's own tests as pinned rather than any edits the agent made to them.
 

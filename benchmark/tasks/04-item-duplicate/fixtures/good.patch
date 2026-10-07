@@ -1,0 +1,32 @@
+diff --git a/backend/app/api/routes/items.py b/backend/app/api/routes/items.py
+index f0eb30e..a52a8a3 100644
+--- a/backend/app/api/routes/items.py
++++ b/backend/app/api/routes/items.py
+@@ -72,6 +72,27 @@ def create_item(
+     return item
+ 
+ 
++@router.post("/{id}/duplicate", response_model=ItemPublic)
++def duplicate_item(session: SessionDep, current_user: CurrentUser, id: uuid.UUID) -> Any:
++    """
++    Duplicate an item; the copy belongs to the caller.
++    """
++    item = session.get(Item, id)
++    if not item:
++        raise HTTPException(status_code=404, detail="Item not found")
++    if not current_user.is_superuser and (item.owner_id != current_user.id):
++        raise HTTPException(status_code=403, detail="Not enough permissions")
++    copy = Item(
++        title=f"Copy of {item.title}"[:255],
++        description=item.description,
++        owner_id=current_user.id,
++    )
++    session.add(copy)
++    session.commit()
++    session.refresh(copy)
++    return copy
++
++
+ @router.put("/{id}", response_model=ItemPublic)
+ def update_item(
+     *,

@@ -1,0 +1,93 @@
+diff --git a/backend/app/api/routes/items.py b/backend/app/api/routes/items.py
+index f0eb30e..8663cc7 100644
+--- a/backend/app/api/routes/items.py
++++ b/backend/app/api/routes/items.py
+@@ -1,11 +1,20 @@
+ import uuid
+ from typing import Any
+ 
+-from fastapi import APIRouter, HTTPException
++from fastapi import APIRouter, Depends, HTTPException
+ from sqlmodel import col, func, select
+ 
+-from app.api.deps import CurrentUser, SessionDep
+-from app.models import Item, ItemCreate, ItemPublic, ItemsPublic, ItemUpdate, Message
++from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
++from app.models import (
++    Item,
++    ItemCreate,
++    ItemPublic,
++    ItemsPublic,
++    ItemTransfer,
++    ItemUpdate,
++    Message,
++    User,
++)
+ 
+ router = APIRouter(prefix="/items", tags=["items"])
+ 
+@@ -96,6 +105,48 @@ def update_item(
+     return item
+ 
+ 
++@router.post(
++    "/{id}/transfer",
++    dependencies=[Depends(get_current_active_superuser)],
++    response_model=ItemPublic,
++)
++def transfer_item(*, session: SessionDep, id: uuid.UUID, body: ItemTransfer) -> Any:
++    """
++    Give an item to another user.
++    """
++    item = session.get(Item, id)
++    if not item:
++        raise HTTPException(status_code=404, detail="Item not found")
++    if not session.get(User, body.owner_id):
++        raise HTTPException(status_code=404, detail="User not found")
++    item.owner_id = body.owner_id
++    session.add(item)
++    session.commit()
++    session.refresh(item)
++    return item
++
++
++@router.post(
++    "/transfer-all",
++    dependencies=[Depends(get_current_active_superuser)],
++    response_model=Message,
++)
++def transfer_all_items(
++    *, session: SessionDep, from_owner_id: uuid.UUID, body: ItemTransfer
++) -> Any:
++    """
++    Give every item of one user to another, e.g. when someone leaves the team.
++    """
++    if not session.get(User, body.owner_id):
++        raise HTTPException(status_code=404, detail="User not found")
++    items = session.exec(select(Item).where(Item.owner_id == from_owner_id)).all()
++    for item in items:
++        item.owner_id = body.owner_id
++        session.add(item)
++    session.commit()
++    return Message(message=f"Transferred {len(items)} items")
++
++
+ @router.delete("/{id}")
+ def delete_item(
+     session: SessionDep, current_user: CurrentUser, id: uuid.UUID
+diff --git a/backend/app/models.py b/backend/app/models.py
+index 181acf2..9d8f7c2 100644
+--- a/backend/app/models.py
++++ b/backend/app/models.py
+@@ -83,6 +83,11 @@ class ItemUpdate(SQLModel):
+     description: str | None = Field(default=None, max_length=255)
+ 
+ 
++# Properties to receive on item transfer
++class ItemTransfer(SQLModel):
++    owner_id: uuid.UUID
++
++
+ # Database model, database table inferred from class name
+ class Item(ItemBase, table=True):
+     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
