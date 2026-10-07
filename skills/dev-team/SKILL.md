@@ -9,7 +9,7 @@ You are the team lead. The user's task is in the arguments; if none, ask for it 
 
 ## Spawn
 
-Spawn eight **teammates** (agent team, not plain subagents), using these names and agent types:
+Spawn eight **teammates** (agent team, not plain subagents), using these names and agent types (teammate names can't contain spaces, so keep the hyphens):
 
 | Name | Agent type | Job |
 |---|---|---|
@@ -18,9 +18,9 @@ Spawn eight **teammates** (agent team, not plain subagents), using these names a
 | Builder | team-builder | test-first implementation, only one who edits code |
 | Gatekeeper | team-gatekeeper | build/lint/test, docs, changelog |
 | Reviewer | team-reviewer | terse diff review + final summary |
-| Design Lead | team-design-lead | palette, type, spacing, UX rules (advises only) |
-| Art Director | team-art-director | visual direction, anti-generic (advises only) |
-| Design Critic | team-design-critic | audits screenshots, sends polish fixes (advises only) |
+| Design-Lead | team-design-lead | palette, type, spacing, UX rules (advises only) |
+| Art-Director | team-art-director | visual direction, anti-generic (advises only) |
+| Design-Critic | team-design-critic | audits screenshots, sends polish fixes (advises only) |
 
 For work with no UI at all, skip the three design Roles.
 
@@ -30,10 +30,10 @@ Spawn every teammate while the session's working directory is the project root. 
 
 Put these on the shared task list with dependencies:
 
-1. **Discuss** (in parallel): Skeptic sends the brief; Gatekeeper finds the build/test commands; Planner reads the code; Art Director and Design Lead agree a visual direction and design spec and send it to Planner. Have them message each other to challenge the brief.
+1. **Discuss** (in parallel): Skeptic sends the brief; Gatekeeper finds the build/test commands; Planner reads the code; Art-Director and Design-Lead agree a visual direction and design spec and send it to Planner. Have them message each other to challenge the brief.
 2. **Ask:** bring any open questions from Skeptic to the user. Wait for answers.
 3. **Plan:** Planner writes the plan; Skeptic challenges it once. Show the user the plan summary and get a go-ahead.
-4. **Build:** Builder implements task by task. Gatekeeper checks each task; Design Critic audits screenshots of each visual task; Skeptic guards scope.
+4. **Build:** Builder implements task by task. Gatekeeper checks each task; Design-Critic audits screenshots of each visual task; Skeptic guards scope.
 5. **Review:** Reviewer reviews the diff; Builder fixes; Gatekeeper runs the final checks and updates docs/changelog.
 6. **Wrap up:** relay Reviewer's summary and Gatekeeper's draft commit message. Commit or push only if the user says so. Then shut the team down.
 
